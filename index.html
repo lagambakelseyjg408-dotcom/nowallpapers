@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="description" content="无墙论文查询 · 本地学术检索：国内直连开放 API，一键定位开放获取全文，自动生成 GB/T 7714 参考文献。">
+<title>无墙论文查询</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon-48.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png?v=1.3.0">
+<link rel="stylesheet" href="style.css?v=1.3.0">
+</head>
+<body>
+
+<div class="head">
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-logo" src="logo-96.png?v=1.3.0" alt="" width="30" height="30">
+    <span class="brand-name">无墙论文查询</span>
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" id="btnShelf" title="收藏夹">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M6 3h12v18l-6-4.2L6 21z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      <b id="shelfCount" class="count">0</b>
+    </button>
+    <button class="icon-btn" id="btnHealth" title="网络体检">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M3 12h4l2.5-6 4 13L16 12h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="icon-btn" id="btnSettings" title="设置">
+      <svg viewBox="0 0 24 24" width="19" height="19"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M19.4 13.9a7.8 7.8 0 0 0 .05-1.9 7.8 7.8 0 0 0-.05-1.9l1.6-1.2-1.8-3.1-1.9.77a7.7 7.7 0 0 0-3.2-1.86L13.7 2.8h-3.4l-.4 1.9a7.7 7.7 0 0 0-3.2 1.86l-1.9-.77-1.8 3.1 1.6 1.2a7.8 7.8 0 0 0 0 3.8l-1.6 1.2 1.8 3.1 1.9-.77a7.7 7.7 0 0 0 3.2 1.86l.4 1.9h3.4l.4-1.9a7.7 7.7 0 0 0 3.2-1.86l1.9.77 1.8-3.1z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<form class="searchbar" id="searchForm" autocomplete="off">
+  <svg class="s-ico" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <input id="q" type="search" placeholder="搜索论文标题 / 关键词，中文也行" enterkeyhint="search" spellcheck="false">
+  <button type="submit" id="btnSearch" class="go">搜索</button>
+</form>
+
+<div class="filters" id="filters">
+  <select id="sort" class="chip-select" title="排序">
+    <option value="relevance">相关度</option>
+    <option value="cited">被引最多</option>
+    <option value="newest">最新发表</option>
+    <option value="oldest">最早发表</option>
+  </select>
+  <button type="button" class="chip" id="chipOa">仅开放获取</button>
+  <div class="year-wrap">
+    <input id="yearFrom" inputmode="numeric" placeholder="起始年" maxlength="4">
+    <span>—</span>
+    <input id="yearTo" inputmode="numeric" placeholder="结束年" maxlength="4">
+  </div>
+  <button type="button" class="chip" id="chipWall">隐藏墙外</button>
+  <button type="button" class="chip" id="chipAdv">高级检索</button>
+  <button type="button" class="chip" id="chipSources">数据源</button>
+</div>
+<div class="progress" aria-hidden="true"></div>
+</div>
+
+<div class="adv" id="adv" hidden>
+  <div class="adv-grid">
+    <label><span>标题</span><input id="fTitle" placeholder="writing proficiency" autocomplete="off"></label>
+    <label><span>作者</span><input id="fAuthor" placeholder="Cumming" autocomplete="off"></label>
+    <label><span>期刊</span><input id="fVenue" placeholder="Language Learning" autocomplete="off"></label>
+    <label><span>摘要</span><input id="fAbstract" placeholder="peer feedback" autocomplete="off"></label>
+  </div>
+  <div class="adv-actions">
+    <select id="fType" class="chip-select" title="文献类型">
+      <option value="">全部类型</option>
+      <option value="article">期刊论文</option>
+      <option value="review">综述</option>
+      <option value="preprint">预印本</option>
+    </select>
+    <button type="button" class="chip" id="advClear">清空字段</button>
+    <button type="button" class="chip" id="advGo">按字段检索</button>
+  </div>
+  <p class="adv-tip">字段可任意组合，留空即忽略；普通搜索框里加英文双引号可精确匹配短语。</p>
+</div>
+
+<div class="srcbar" id="srcbar" hidden></div>
+
+<main id="main">
+  <div id="banners"></div>
+  <div id="status" class="status"></div>
+  <div id="results" class="results"></div>
+  <div id="empty" class="empty" hidden>
+    <p class="empty-title">输入关键词开始检索</p>
+    <p class="empty-sub">例子可以直接点：</p>
+    <div class="samples" id="samples"></div>
+
+    <button class="manual-btn" id="manualBtn">使用说明书 · 有问题请联系彦同志</button>
+    <template id="manualTpl">
+      <p class="manual-warn">有问题请联系彦同志</p>
+      <h2 class="manual-title">使用说明书</h2>
+
+      <div class="m-block">
+        <h3>一、它在解决哪道墙</h3>
+        <p>这里其实有两道墙，要分开看：<b>防火墙</b>让很多出版商站点（Taylor &amp; Francis、SAGE、Emerald、ResearchGate 等）直接打不开；<b>付费墙</b>是打得开也要订阅才能看全文。</p>
+        <p>这个工具主要对付第一道：检索走的是不被墙的开放接口（OpenAlex / Crossref / ERIC / Europe PMC），再尽量找<b>不在墙内</b>的开放获取副本（机构仓储、TWC、CORE 这类）。第二道靠文献传递和向作者索取，也不在墙内。</p>
+      </div>
+
+      <div class="m-block">
+        <h3>二、怎么搜</h3>
+        <ul>
+          <li>直接输中英文关键词，中文会自动转成英文检索词。</li>
+          <li>加英文双引号可精确匹配短语，例如 <code>"peer feedback"</code>。</li>
+          <li>点「高级检索」可按 标题 / 作者 / 期刊 / 摘要 分别限定，字段可组合。</li>
+          <li>配合筛选：仅开放获取、年份区间、排序、数据源开关。</li>
+        </ul>
+      </div>
+
+      <div class="m-block">
+        <h3>三、怎么看解读</h3>
+        <p>每篇下面有一条「速读」，按题录与摘要自动生成：文献类型、研究取向、方法线索、样本量，以及它适合放进你论文的哪个部分。摘要缺失时会标注，只作参考、不要当结论引用。</p>
+      </div>
+
+      <div class="m-block">
+        <h3>四、怎么拿全文</h3>
+        <ul>
+          <li>标了「开放获取」且能定位到 PDF 的，点「获取全文 → 下载」直接下载。</li>
+          <li>找不到时给四条通道：NSTL 文献传递、国家哲社文献中心、参考咨询联盟、给作者发邮件（英文模板已写好，复制即可）。</li>
+          <li>闭源论文别死磕，文献传递通常几小时就有结果。</li>
+        </ul>
+      </div>
+
+      <div class="m-block">
+        <h3>五、怎么引用</h3>
+        <p>每篇可一键复制 GB/T 7714-2015、APA 7、BibTeX、RIS、EndNote；收藏后在收藏夹里批量导出整份参考文献表。</p>
+      </div>
+
+      <div class="m-block">
+        <h3>六、边界</h3>
+        <p>只聚合公开接口与开放获取内容，不碰盗版镜像。付费墙的论文请走文献传递或向作者索取——这既是合规的，实际也更快。</p>
+      </div>
+    </template>
+  </div>
+  <button id="more" class="more" hidden>加载更多</button>
+</main>
+
+<footer class="foot">
+  <p class="foot-note">
+    数据来自 OpenAlex / Crossref / ERIC / DOAJ / arXiv / Europe PMC 的公开接口，
+    全文只走开放获取渠道；闭源论文给出文献传递、作者索取等合规路径。
+  </p>
+  <div class="signature" id="signature"><span class="sig-text">姚老师专用</span></div>
+</footer>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<section class="sheet" id="sheet" hidden aria-modal="true" role="dialog"></section>
+<div class="toasts" id="toasts"></div>
+
+<script>window.PF_STATIC = true; window.PF_VERSION = "1.3.0";</script>
+<script src="pf-core.js?v=1.3.0"></script>
+<script src="pf-data.js?v=1.3.0"></script>
+<script src="pf-api.js?v=1.3.0"></script>
+<script src="app.js?v=1.3.0"></script>
+</body>
+</html>
